@@ -1,12 +1,22 @@
 {
-  "name": "dsafsaf",
+  "name": "ktalk",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "developed by Hong and Chae",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "node app.js"
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HongSukJu/HW-ADProject.git"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HongSukJu/HW-ADProject/issues"
+  },
+  "homepage": "https://github.com/HongSukJu/HW-ADProject#readme",
+  "dependencies": {
+    "socketio": "^1.0.0"
+  }
 }
