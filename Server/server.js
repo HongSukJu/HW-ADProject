@@ -36,10 +36,6 @@ io.on("connection", function (socket) {
                 message : `${data.name}님이 나가셨습니다.`
             })
         }
-
-        if(data.type == "init") {
-            // 씨발
-        }
     })
 
     socket.on("room", function (data) {

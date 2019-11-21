@@ -1,53 +1,67 @@
 import socketio
+from Client_UI import *
 
-class user: # 유저 생성, 정보 저장 기능
-    def __init__(self, name):
-        self.name = name
+class user(Ktalk):
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "채원찬"
         self.room = []
-        self.readInfo()
         self.start_connection()
 
     def start_connection(self):
         self.sio = socketio.Client()
-        self.sio.connect("http://http://localhost:5000")
+        self.sio.connect("http://localhost:5000")
         
+        self.sio.sleep(1)
+
         @self.sio.on("connection")
         def on_connect(data):
-            pass
+            if data["type"] == "connected":
+                self.sendMessage("연결 성공")
 
         @self.sio.on("system")
         def on_connect(data):
-            pass
+            self.sendMessage(data["message"] + "\n", "system")
+
 
         @self.sio.on("msg")
         def on_connect(data):
-            pass
+            self.sendMessage(data["name"] + "\n" * 2 + data["message"] + "\n")
 
+        self.userInOut({
+            "type" : "join",
+            "name" : self.name,
+            "room" : "막강소융"
+        })
+
+    def sendMessage(self, data, userType=None):
+        item = QListWidgetItem()
+        item.setText(data)
+        if userType == "self":
+            item.setTextAlignment(Qt.AlignRight)
+        elif userType == "system":
+            item.setTextAlignment(Qt.AlignCenter)
+        self.chattingBox.addItem(item)
+
+    def userInOut(self, data):
+        self.sio.emit("roommanager", data)
+
+    def msgToRoom(self, data):
+        self.sio.emit("room", data)
+        self.sendMessage(data["name"] + "\n" * 2 + data["message"] + "\n", "self")
+    
     def writeChat(self):
         pass
 
-    def writeRoom(self):
-        pass
-
-    def writeInfo(self):
-        pass
-
-    def readInfo(self):
-        pass
-
-class roommanager: # 방과 유저 연결 기능
-    def userInOut(self, user, data):
-        user.sio.emit("roomanager", data)
-
-    def initRoom(self):
-        # 서버에 빈 방 요청
-        # 서버에서 1~100까지 랜덤으로 생성?
-        # 서버 내에도 room array 필요
-        # 어레이 내에 존재할 경우 다시 랜덤배정
-        pass
-
-class room: # 방 내에서의 기능
-    def msgToRoom(self, user, data):
-        user.sio.emit("room", data)
-        
-        
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_Return:
+            chat = self.messageText.text()
+            data = {
+                "type" : "chat",
+                "name" : self.name,
+                "room" : "막강소융",
+                "message" : chat
+            }
+            self.msgToRoom(data)
+            self.messageText.setText("")
