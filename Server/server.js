@@ -2,10 +2,6 @@ const io = require("socket.io")(5000);
 
 io.on("connection", function (socket) {
 
-    socket.emit("connection", {
-        type : "connected"
-    })
-
     socket.on("chat", function(data) {
         console.log(`${data.room} // ${data.name} : ${data.message}`)
     })
@@ -35,6 +31,8 @@ io.on("connection", function (socket) {
             socket.broadcast.to(data.room).emit("system", {
                 message : `${data.name}님이 나가셨습니다.`
             })
+
+            console.log(`${data.name} -X ${data.room}`);
         }
     })
 
