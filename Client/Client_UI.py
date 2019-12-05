@@ -12,7 +12,6 @@ class Ktalk(QWidget):
         self.initUI()
 
     def initUI(self):
-        
         # main layout
         main = QGridLayout()
         # chatting
@@ -41,8 +40,8 @@ class Ktalk(QWidget):
         self.show()
 
         self.friendList.friendButton.clicked.connect(self.buttonClicked)
-        self.roomList.friendButton.clicked.connect(self.buttonClicked)
         self.friendList.chattingButton.clicked.connect(self.buttonClicked)
+        self.roomList.friendButton.clicked.connect(self.buttonClicked)
         self.roomList.chattingButton.clicked.connect(self.buttonClicked)
         self.roomList.makeRoomButton.clicked.connect(self.makePopUp)
         self.popup.okButton.clicked.connect(self.showChat)
@@ -55,12 +54,10 @@ class Ktalk(QWidget):
         if sender.text() == "채팅":
             self.stackWidget.setCurrentIndex(2)
         if sender.text() == "확인":
-            print('ok')
             if self.security.passwordLine.text() == self.IF['password']:
                 self.stackWidget.setCurrentIndex(2)
 
     def makePopUp(self):
-
         self.popup.popupValue.clear()
         self.popup.show()
         self.popup.popupLabel.setText("방 이름 : ")
@@ -68,7 +65,6 @@ class Ktalk(QWidget):
         self.popup.cancelButton.clicked.connect(self.popup.hide)
 
     def showChat(self):
-
         self.chatting.show()
 
 class Window(QWidget):
@@ -119,9 +115,9 @@ class Friend(Window):
         self.friendBox = QListWidget()
         self.popup = Popup()
         self.friendButton = QPushButton("친구")
+        self.chattingButton = QPushButton("채팅")
         self.friendAddButton = QPushButton("+")
         self.friendDelButton = QPushButton("-")
-        self.chattingButton = QPushButton("채팅")
         self.friendDelOkButton = QPushButton("확인")
         self.friendDelCancelButton = QPushButton("취소")
         self.layout.addWidget(self.friendDelButton, 1, 1)
@@ -157,7 +153,6 @@ class Friend(Window):
             self.friendDelOkButton.hide()
 
     def makePopUp(self):
-
         self.popup.show()
         self.popup.popupLabel.setText("친구 이름 : ")
         self.popup.okButton.clicked.connect(self.okButtonFuntion)
@@ -187,15 +182,16 @@ class Security(Window):
 
     def __init__(self):
         super().__init__()
-        self.namelabel = QLabel()
+        self.nameLabel = QLabel()
         self.passwordLine = QLineEdit()
         self.verifyButton = QPushButton('확인')
 
-        self.layout.addWidget(self.namelabel,1,1)
-        self.layout.addWidget(self.passwordLine,2,1)
-        self.layout.addWidget(self.verifyButton,2,2)
-        self.setGeometry(300, 300, 800, 1000)
+        self.layout.setAlignment(Qt.AlignCenter)
 
+        self.layout.addWidget(self.namelabel, 1, 1)
+        self.layout.addWidget(self.passwordLine, 2, 1)
+        self.layout.addWidget(self.verifyButton, 2, 2)
+        
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
             self.verifyButton.click()
