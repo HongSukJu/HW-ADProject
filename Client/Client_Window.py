@@ -34,7 +34,7 @@ class user(Ktalk):
         self.chatting.chattingBox.addItem(item)
 
     def userInOut(self):
-        self.room = self.popup.roomValue.text()
+        self.room = self.popup.popupValue.text()
         self.sio.emit("roommanager", {
             "type" : "join",
             "name" : self.name,
