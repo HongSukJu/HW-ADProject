@@ -1,9 +1,36 @@
-const io = require("socket.io")(5000);
+const io = require("socket.io")(5000)
+let currentUsers = {}
+let saveUsers = {}
 
 io.on("connection", function (socket) {
 
-    socket.on("chat", function(data) {
-        console.log(`${data.room} // ${data.name} : ${data.message}`)
+    socket.on("information", function(data) {
+        currentUsers[data.id] = socket.id
+        if (!(data.name in saveUsers)) {
+            saveUsers[data.id] = data.name
+        }
+        console.log("\n" + "-----------------------------------")
+        console.log(`접속감지, 이름 : ${data.name}, 아이디 : ${data.id}`)
+        console.log("현재 접속자 : ")
+        console.log(currentUsers)
+        console.log("서버 내 유저 : ")
+        console.log(saveUsers)
+        console.log("-----------------------------------" + "\n")
+    })
+
+    socket.on("friendmanager", function(data) {
+        if (data.friendId in saveUsers) {
+            socket.emit("exist", {
+                id : data.friendId,
+                boolean : "True",
+                name : saveUsers[data.friendId]
+            })
+        } else {
+            socket.emit("exist", {
+                id : data.friendId,
+                boolean : "False"
+            })
+        }
     })
 
     socket.on("roommanager", function(data) {

@@ -9,16 +9,22 @@ class user(Ktalk):
         super().__init__()
         self.dataReading()
         self.name = user.IF["name"]
-        self.security.nameLabel.setText(self.name)
+        self.id = user.IF["id"]
         self.friend = user.IF["friend"]
-        self.Friend.friendBox.addItems(self.friend)
         self.room = ""
+        # 다른 방법이 있을까
+        self.currentFriend = ""
+        self.currentFriendCheck = ""
+        self.currentFriendName = ""
+
+        self.security.nameLabel.setText(self.name + "\n")
+        self.friendList.friendBox.addItems(self.friend)
 
         self.start_connection()
     
     def start_connection(self):
         self.sio = socketio.Client()
-        self.sio.connect("http://localhost:5000")
+        self.sio.connect("http://10.30.118.179:5000")
 
         @self.sio.on("system")
         def on_connect(data):
@@ -29,19 +35,45 @@ class user(Ktalk):
         def on_connect(data):
             self.sendMessage(data["name"] + "\n" * 2 + data["message"] + "\n")
 
+        @self.sio.on("exist")
+        def on_connect(data):
+            if data["boolean"] == "True":
+                self.currentFriendCheck = data["boolean"]
+                self.currentFriendName = data["name"]
+                self.currentFriend = data["id"]
+            else:
+                self.currentFriendCheck = data["boolean"]
+                self.currentFriendName = ""
+                self.currentFriend = data["id"]
+
         self.friendList.friendButton.clicked.connect(self.menuButtonClicked)
         self.friendList.chattingButton.clicked.connect(self.menuButtonClicked)
-        # self.friendList.
+        self.friendList.friendMakeButton.clicked.connect(self.friendButtonClicked)
+        self.friendList.friendDelButton.clicked.connect(self.friendButtonClicked)
+        self.friendList.friendDelOkButton.clicked.connect(self.friendButtonClicked)
+        self.friendList.friendDelCancelButton.clicked.connect(self.friendButtonClicked)
         self.roomList.friendButton.clicked.connect(self.menuButtonClicked)
         self.roomList.chattingButton.clicked.connect(self.menuButtonClicked)
         self.roomList.makeRoomButton.clicked.connect(self.makeRoomButtonClicked)
+        self.makeFriend.friendSearch.clicked.connect(self.makeFriendButtonClicked)
+        self.makeFriend.okButton.clicked.connect(self.makeFriendButtonClicked)
+        self.makeFriend.cancelButton.clicked.connect(self.makeFriendButtonClicked)
+        self.makeFriend.backButton.clicked.connect(self.makeFriendButtonClicked)
         self.security.verifyButton.clicked.connect(self.securityCheck)
         self.userInit.okButton.clicked.connect(self.dataReadingException)
+
+    # 서버에 정보 보내기
+    def sendInfo(self):
+        self.sio.emit("information", {
+            "name" : self.name,
+            "id" : self.id
+        })
 
     # 아이디/패스워드 체크
     def securityCheck(self):
         if self.security.passwordLine.text() == user.IF["password"] and self.security.idLine.text() == user.IF["id"]:
             self.stackWidget.setCurrentIndex(2)
+            self.sendInfo()
 
     # 메뉴바 처리
     def menuButtonClicked(self):
@@ -50,6 +82,70 @@ class user(Ktalk):
             self.stackWidget.setCurrentIndex(2)
         elif sender.text() == "채팅":
             self.stackWidget.setCurrentIndex(3)
+    
+    # 친구창 처리
+    def friendButtonClicked(self):
+        sender = self.sender()
+        if sender.text() == "+":
+            self.stackWidget.setCurrentIndex(4)
+        elif sender.text() == "-":
+            self.friendList.friendBox.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.friendList.setChoiceButtonVisible()
+        elif sender.text() == "확인":
+            self.friendListDelete()
+            self.friendList.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
+        elif sender.text() == "취소":
+            self.friendList.setChoiceButtonUnvisible()
+            self.friendList.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
+
+    def makeFriendButtonClicked(self):
+        sender = self.sender()
+        if sender.text() == "검색":
+            friendId = self.makeFriend.friendId.text()
+            if friendId:
+                if friendId in self.friend:
+                    self.makeFriend.resultfriendId.setText("이미 있는 친구 입니다.")
+                    self.makeFriend.resultfriendName.setText(self.currentFriendName)
+                    self.makeFriend.setLayOutVisibleWithoutButton()
+                elif friendId == self.id:
+                    self.makeFriend.resultfriendId.setText("나 자신은 영원한 인생의 친구 입니다.")
+                    self.makeFriend.resultfriendName.setText(self.currentFriendName)
+                    self.makeFriend.setLayOutVisibleWithoutButton()
+                else:
+                    self.sio.emit("friendmanager", {
+                        "friendId" : self.makeFriend.friendId.text()
+                    })
+                    while True:
+                        if self.currentFriend != friendId:
+                            continue
+                        else:
+                            if self.currentFriendCheck == "True":
+                                self.makeFriend.resultfriendName.setText(self.currentFriendName)
+                                self.makeFriend.resultfriendId.setText(self.currentFriend)
+                                self.makeFriend.setLayOutVisible()
+                                print("check")
+                                return
+                            else:
+                                self.makeFriend.resultfriendId.setText("사용자를 찾을 수 없습니다.")
+                                self.makeFriend.resultfriendName.setText("검색 결과 없음")
+                                self.makeFriend.setLayOutVisibleWithoutButton()
+            else:
+                self.makeFriend.resultfriendId.setText("최소 한자리 이상의 아이디를 검색해야 합니다.")
+                self.makeFriend.resultfriendName.setText("검색 결과 없음")
+                self.makeFriend.setLayOutVisibleWithoutButton()
+        elif sender.text() == "추가":
+            self.friendList.friendBox.addItem(self.currentFriendName)
+            self.makeFriend.friendId.setText("")
+            self.makeFriend.setLayOutUnvisible()
+            self.stackWidget.setCurrentIndex(2)
+        elif sender.text() == "취소":
+            self.makeFriend.friendId.setText("")
+            self.makeFriend.setLayOutUnvisible()
+            self.stackWidget.setCurrentIndex(2)
+        elif sender.text() == "<-":
+            self.makeFriend.friendId.setText("")
+            self.makeFriend.setLayOutUnvisible()
+            self.stackWidget.setCurrentIndex(2)
 
     # 방 만들기
     def makeRoomButtonClicked(self):
@@ -110,32 +206,34 @@ class user(Ktalk):
         elif not myPassWord:
             self.userInit.exceptionAlert.showMessage("패스워드가 없습니다.", 2000)
             return
-        elif myPassWord == myPassWordCheck:
+        elif myPassWord != myPassWordCheck:
+            self.userInit.exceptionAlert.showMessage("패스워드가 일치하지 않습니다.", 2000)
+            return
+        else :
             user.IF = {
                 'name' : myName,
                 'id' : myId,
                 'password' : myPassWord,
                 'friend' : []
                 }
+            self.name = user.IF["name"] + "\n"
             self.dataWriting()
             self.stackWidget.setCurrentIndex(2)
-            self.name = user.IF["name"]
-        else:
-            self.userInit.exceptionAlert.showMessage("패스워드가 일치하지 않습니다.", 2000)
-            return
+            self.sendInfo()
 
     # 사용자 정보 저장하기   
     def dataWriting(self):
         f = open("DataBase/userInfo.dat", "wb")
         pickle.dump(user.IF, f)
 
-    def makeFriend(self):
-        pass
-
     # 이거 아직 안됨
     def friendListDelete(self):
-        # self.friend.remove(self.friendBox.currentItem())
-        # self.friendBox.takeItem(self.friendBox.currentRow())
-        # self.friendDelCancelButton.hide()
-        # self.friendDelOkButton.hide()
-        pass
+        items = self.friendList.friendBox.selectedItems()
+        indexs = self.friendList.friendBox.selectedIndexes()
+        if not indexs:
+            self.friendList.setChoiceButtonUnvisible()
+        for item, index in zip(items, indexs):
+            self.friend.remove(item.text())
+            self.friendList.friendBox.takeItem(index.column())
+            self.friendList.setChoiceButtonUnvisible()
+        self.dataWriting()

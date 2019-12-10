@@ -1,4 +1,4 @@
-import sys, pickle
+import sys
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -29,7 +29,6 @@ class Ktalk(QWidget):
         self.stackWidget.addWidget(self.userInit)
         self.stackWidget.addWidget(self.friendList)
         self.stackWidget.addWidget(self.roomList)
-        self.stackWidget.addWidget(self.chatting)
         self.stackWidget.addWidget(self.makeFriend)
         # set main layout
         main.addWidget(self.stackWidget, 1, 0, 1, 2)
@@ -93,36 +92,69 @@ class Friend(Window):
     def __init__(self):
         super().__init__()
         self.friendBox = QListWidget()
-        self.friendMakeButton = QPushButton("+")
+        self.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.friendButton = QPushButton("친구")
         self.chattingButton = QPushButton("채팅")
+        self.friendMakeButton = QPushButton("+")
+        self.friendDelButton = QPushButton("-")
+        self.friendDelOkButton = QPushButton("확인")
+        self.friendDelCancelButton = QPushButton("취소")
 
+        self.layout.addWidget(self.friendDelButton, 1, 1)
         self.layout.addWidget(self.friendMakeButton, 1, 6)
+        self.layout.addWidget(self.friendDelOkButton, 1, 1)
+        self.layout.addWidget(self.friendDelCancelButton, 1, 6)
         self.layout.addWidget(self.friendBox, 2, 1, 1, 6)
         self.layout.addWidget(self.friendButton, 3, 1, 1, 3)
         self.layout.addWidget(self.chattingButton, 3, 4, 1, 3)
+
+        self.setChoiceButtonUnvisible()
+
+    def setChoiceButtonUnvisible(self):
+        self.friendDelOkButton.setVisible(False)
+        self.friendDelCancelButton.setVisible(False)
+
+    def setChoiceButtonVisible(self):
+        self.friendDelOkButton.setVisible(True)
+        self.friendDelCancelButton.setVisible(True)
 
 class MakeFriend(Window):
 
     def __init__(self):
         super().__init__()
-        self.friendLabel = QLabel("닉네임 : ")
-        self.friendName = QLineEdit()
+        self.makeFriendLabel = QLabel("친구찾기\n")
+        self.makeFriendLabel.setFont(QFont("Arial", 30, QFont.Bold))
+        self.friendLabel = QLabel("아이디 : ")
+        self.friendId = QLineEdit()
         self.friendSearch = QPushButton("검색")
+        self.backButton = QPushButton("<-")
+        self.emptyLabel = QLabel("\n" * 8)
         
         self.resultLayout = QGridLayout()
         self.resultfriendName = QLabel()
-        self.okButton = QPushButton()
-        self.delButton = QPushButton()
+        self.resultfriendName.setAlignment(Qt.AlignCenter)
+        self.resultfriendName.setFont(QFont("Arial", 25))
+        self.resultfriendId = QLabel()
+        self.resultfriendId.setAlignment(Qt.AlignCenter)
+        self.okButton = QPushButton("추가")
+        self.cancelButton = QPushButton("취소")
 
         self.resultLayout.addWidget(self.resultfriendName, 1, 1, 1, 2)
-        self.resultLayout.addWidget(self.okButton, 2, 1)
-        self.resultLayout.addWidget(self.delButton, 2, 2)
+        self.resultLayout.addWidget(self.resultfriendId, 2, 1, 1, 2)
+        self.resultLayout.addWidget(self.okButton, 3, 1)
+        self.resultLayout.addWidget(self.cancelButton, 3, 2)
 
-        self.layout.addWidget(self.friendLabel, 1, 1)
-        self.layout.addWidget(self.friendName, 2, 1, 1, 2)
-        self.layout.addWidget(self.friendSearch, 2, 3)
-        self.layout.addLayout(self.resultLayout, 3, 1)
+        self.resultLayout.setAlignment(Qt.AlignVCenter)
+
+        self.layout.addWidget(self.backButton, 1, 1)
+        self.layout.addWidget(self.makeFriendLabel, 2, 3)
+        self.layout.addWidget(self.friendLabel, 3, 1)
+        self.layout.addWidget(self.friendId, 3, 2, 1, 3)
+        self.layout.addWidget(self.friendSearch, 3, 5)
+        self.layout.addWidget(self.emptyLabel, 4, 3)
+        self.layout.addLayout(self.resultLayout, 5, 3)
+        
+        self.layout.setAlignment(Qt.AlignTop)
 
         self.setLayOutUnvisible()
 
@@ -132,13 +164,19 @@ class MakeFriend(Window):
     
     def setLayOutUnvisible(self):
         self.resultfriendName.setVisible(False)
+        self.resultfriendId.setVisible(False)
         self.okButton.setVisible(False)
-        self.delButton.setVisible(False)
+        self.cancelButton.setVisible(False)
 
     def setLayOutVisible(self):
         self.resultfriendName.setVisible(True)
+        self.resultfriendId.setVisible(True)
         self.okButton.setVisible(True)
-        self.delButton.setVisible(True)
+        self.cancelButton.setVisible(True)
+
+    def setLayOutVisibleWithoutButton(self):
+        self.resultfriendName.setVisible(True)
+        self.resultfriendId.setVisible(True)
 
 class Chat(Window):
 
@@ -150,6 +188,7 @@ class Chat(Window):
         self.currentFriendBox = QListWidget()
         self.messageText = QLineEdit()
         self.sendButton = QPushButton("보내기")
+
         self.layout.addWidget(self.chattingBox, 1, 1, 1, 5)
         self.layout.addWidget(self.currentFriendBox, 1, 6, 1, 2)
         self.layout.addWidget(self.messageText, 2, 1, 1, 5)
@@ -166,17 +205,25 @@ class Security(Window):
 
     def __init__(self):
         super().__init__()
+        self.welcomeLabel = QLabel("KTalk\n")
+        self.welcomeLabel.setFont(QFont("Arial", 40))
+        self.welcomeLabel.setAlignment(Qt.AlignCenter)
         self.nameLabel = QLabel()
+        self.nameLabel.setFont(QFont("Arial", 20))
+        self.nameLabel.setAlignment(Qt.AlignCenter)
         self.idLine = QLineEdit()
+        self.idLine.setPlaceholderText("아이디를 입력해주세요.")
         self.passwordLine = QLineEdit()
+        self.passwordLine.setPlaceholderText("비밀번호를 입력해주세요.")
         self.verifyButton = QPushButton('확인')
 
         self.layout.setAlignment(Qt.AlignCenter)
 
-        self.layout.addWidget(self.nameLabel, 1, 1)
-        self.layout.addWidget(self.idLine, 2, 1)
-        self.layout.addWidget(self.passwordLine, 3, 1)
-        self.layout.addWidget(self.verifyButton, 2, 2, 2, 1)
+        self.layout.addWidget(self.welcomeLabel, 1, 1)
+        self.layout.addWidget(self.nameLabel, 2, 1)
+        self.layout.addWidget(self.idLine, 3, 1)
+        self.layout.addWidget(self.passwordLine, 4, 1)
+        self.layout.addWidget(self.verifyButton, 5, 1)
         
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
