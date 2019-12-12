@@ -15,7 +15,7 @@ class Ktalk(QWidget):
         # userinit
         self.userInit = userInit()
         # chatting
-        self.chatting = Chat()
+        self.chatting = {}
         # room
         self.roomList = Room()
         # friend
@@ -35,7 +35,7 @@ class Ktalk(QWidget):
         self.setLayout(main)
 
         self.setWindowTitle("Kook Talk")
-        self.setGeometry(300, 300, 700, 900)
+        self.setGeometry(900, 200, 700, 900)
         self.show()
 
 class Window(QWidget):
@@ -78,14 +78,38 @@ class Room(Window):
 
     def __init__(self):
         super().__init__()
+        self.roomNameValue = QLineEdit()
+        self.roomNameValue.setPlaceholderText("방 이름")
         self.makeRoomButton = QPushButton("+")
+        self.deleteRoomButton = QPushButton("-")
+        self.checkRoomButton = QPushButton("확인")
+        self.cancleRoomButton = QPushButton("취소")
+        self.roomLabel = QLabel("채팅")
+        self.roomLabel.setAlignment(Qt.AlignCenter)
+        self.roomLabel.setFont(QFont("Arial", 30))
         self.roomBox = QListWidget()
         self.friendButton = QPushButton("친구")
         self.chattingButton = QPushButton("채팅")
+
+        self.layout.addWidget(self.roomLabel, 1, 1)
+        self.layout.addWidget(self.roomNameValue, 1, 2, 1, 3)
         self.layout.addWidget(self.makeRoomButton, 1, 6)
+        self.layout.addWidget(self.deleteRoomButton, 1, 5)
+        self.layout.addWidget(self.checkRoomButton, 1, 6)
+        self.layout.addWidget(self.cancleRoomButton, 1, 5)
         self.layout.addWidget(self.roomBox, 2, 1, 1, 6)
         self.layout.addWidget(self.friendButton, 3, 1, 1, 3)
         self.layout.addWidget(self.chattingButton, 3, 4, 1, 3)
+
+        self.setChoiceButtonUnvisible()
+
+    def setChoiceButtonUnvisible(self):
+        self.checkRoomButton.setVisible(False)
+        self.cancleRoomButton.setVisible(False)
+
+    def setChoiceButtonVisible(self):
+        self.checkRoomButton.setVisible(True)
+        self.cancleRoomButton.setVisible(True)
 
 class Friend(Window):
 
@@ -93,6 +117,9 @@ class Friend(Window):
         super().__init__()
         self.friendBox = QListWidget()
         self.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
+        self.friendLabel = QLabel("친구")
+        self.friendLabel.setAlignment(Qt.AlignCenter)
+        self.friendLabel.setFont(QFont("Arial", 30))
         self.friendButton = QPushButton("친구")
         self.chattingButton = QPushButton("채팅")
         self.friendMakeButton = QPushButton("+")
@@ -100,9 +127,10 @@ class Friend(Window):
         self.friendDelOkButton = QPushButton("확인")
         self.friendDelCancelButton = QPushButton("취소")
 
-        self.layout.addWidget(self.friendDelButton, 1, 1)
+        self.layout.addWidget(self.friendLabel, 1, 1)
+        self.layout.addWidget(self.friendDelButton, 1, 5)
         self.layout.addWidget(self.friendMakeButton, 1, 6)
-        self.layout.addWidget(self.friendDelOkButton, 1, 1)
+        self.layout.addWidget(self.friendDelOkButton, 1, 5)
         self.layout.addWidget(self.friendDelCancelButton, 1, 6)
         self.layout.addWidget(self.friendBox, 2, 1, 1, 6)
         self.layout.addWidget(self.friendButton, 3, 1, 1, 3)
@@ -123,13 +151,14 @@ class MakeFriend(Window):
     def __init__(self):
         super().__init__()
         self.makeFriendLabel = QLabel("친구찾기\n")
-        self.makeFriendLabel.setFont(QFont("Arial", 30, QFont.Bold))
+        self.makeFriendLabel.setFont(QFont("Arial", 30))
+        self.makeFriendLabel.setAlignment(Qt.AlignCenter)
         self.friendLabel = QLabel("아이디 : ")
         self.friendId = QLineEdit()
         self.friendSearch = QPushButton("검색")
         self.backButton = QPushButton("<-")
         self.emptyLabel = QLabel("\n" * 8)
-        
+
         self.resultLayout = QGridLayout()
         self.resultfriendName = QLabel()
         self.resultfriendName.setAlignment(Qt.AlignCenter)
@@ -144,15 +173,13 @@ class MakeFriend(Window):
         self.resultLayout.addWidget(self.okButton, 3, 1)
         self.resultLayout.addWidget(self.cancelButton, 3, 2)
 
-        self.resultLayout.setAlignment(Qt.AlignVCenter)
-
         self.layout.addWidget(self.backButton, 1, 1)
-        self.layout.addWidget(self.makeFriendLabel, 2, 3)
-        self.layout.addWidget(self.friendLabel, 3, 1)
-        self.layout.addWidget(self.friendId, 3, 2, 1, 3)
-        self.layout.addWidget(self.friendSearch, 3, 5)
-        self.layout.addWidget(self.emptyLabel, 4, 3)
-        self.layout.addLayout(self.resultLayout, 5, 3)
+        self.layout.addWidget(self.makeFriendLabel, 1, 3)
+        self.layout.addWidget(self.friendLabel, 2, 1)
+        self.layout.addWidget(self.friendId, 2, 2, 1, 3)
+        self.layout.addWidget(self.friendSearch, 2, 5)
+        self.layout.addWidget(self.emptyLabel, 3, 3)
+        self.layout.addLayout(self.resultLayout, 4, 3)
         
         self.layout.setAlignment(Qt.AlignTop)
 
@@ -184,7 +211,6 @@ class Chat(Window):
         super().__init__()
         self.temp = QLabel()
         self.chattingBox = QListWidget()
-        self.chattingBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.currentFriendBox = QListWidget()
         self.messageText = QLineEdit()
         self.sendButton = QPushButton("보내기")
@@ -196,6 +222,7 @@ class Chat(Window):
 
         self.setWindowTitle("Kook Talk")
         self.setGeometry(300, 300, 700, 900)
+        self.show()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:

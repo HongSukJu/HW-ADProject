@@ -18,5 +18,8 @@
   "homepage": "https://github.com/HongSukJu/HW-ADProject#readme",
   "dependencies": {
     "socketio": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.2"
   }
 }
