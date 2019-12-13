@@ -1,5 +1,5 @@
-import socketio, pickle, time
-from Client_UI2 import *
+import socketio, pickle
+from Client_UI import *
 
 class user(Ktalk):
 
@@ -22,7 +22,7 @@ class user(Ktalk):
     
     def start_connection(self):
         self.sio = socketio.Client()
-        self.sio.connect("http://10.30.118.229:5000")
+        self.sio.connect("http://172.30.1.60:5000")
 
         @self.sio.on("system")
         def on_connect(data):
@@ -96,22 +96,22 @@ class user(Ktalk):
     # 아이디/패스워드 체크
     def securityCheck(self):
         if self.security.passwordLine.text() == user.IF["password"] and self.security.idLine.text() == user.IF["id"]:
-            self.stackWidget.setCurrentIndex(2)
+            self.stackWidget.setCurrentIndex(3)
             self.sendInfo()
 
     # 메뉴바 처리
     def menuButtonClicked(self):
         sender = self.sender()
-        if sender.text() == "친구":
-            self.stackWidget.setCurrentIndex(2)
-        elif sender.text() == "채팅":
+        if sender.pos().x() == 0:
             self.stackWidget.setCurrentIndex(3)
+        elif sender.pos().x() == 350:
+            self.stackWidget.setCurrentIndex(4)
     
     # 친구창 처리
     def friendButtonClicked(self):
         sender = self.sender()
         if sender.text() == "+":
-            self.stackWidget.setCurrentIndex(4)
+            self.stackWidget.setCurrentIndex(5)
         elif sender.text() == "-":
             self.friendList.friendBox.setSelectionMode(QAbstractItemView.MultiSelection)
             self.friendList.setChoiceButtonVisible()
@@ -168,15 +168,15 @@ class user(Ktalk):
             self.dataWriting()
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
-            self.stackWidget.setCurrentIndex(2)
+            self.stackWidget.setCurrentIndex(3)
         elif sender.text() == "취소":
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
-            self.stackWidget.setCurrentIndex(2)
+            self.stackWidget.setCurrentIndex(3)
         elif sender.text() == "<-":
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
-            self.stackWidget.setCurrentIndex(2)
+            self.stackWidget.setCurrentIndex(3)
 
     # 방 만들기
     def makeRoomButtonClicked(self):
@@ -194,24 +194,32 @@ class user(Ktalk):
                 self.roomList.roomBox.addItem(roomNameValue)
                 self.roomList.roomNameValue.setText("")
                 
+
     def deleteRoomButtonClicked(self):
         self.roomList.setChoiceButtonVisible()
+        self.roomList.roomBox.setSelectionMode(QAbstractItemView.MultiSelection)
 
     def checkRoomButtonClicked(self):
-        if not self.roomList.roomBox.currentItem():
+        items = self.roomList.roomBox.selectedItems()
+        indexs = self.roomList.roomBox.selectedIndexes()
+        if not indexs:
+            self.roomList.setChoiceButtonUnvisible()
             return
-        roomName = self.roomList.roomBox.currentItem().text()
-        self.sio.emit('roommanager',{
-            "type" : "quit",
-            "name" : self.name,
-            "room" : roomName
-        })
-        self.roomList.roomBox.takeItem(self.roomList.roomBox.currentRow())
-        time.sleep(0.1)
-        del self.chatting[roomName]
+        for item, index in zip(items, indexs):
+            roomName = item.text()
+            self.sio.emit('roommanager',{
+                "type" : "quit",
+                "name" : self.name,
+                "room" : roomName
+            })
+            self.roomList.roomBox.takeItem(index.column())
+            QTest.qWait(100)
+            del self.chatting[roomName]
+        self.roomList.roomBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.roomList.setChoiceButtonUnvisible()
             
     def cancleRoomButtonClicked(self):
+        self.roomList.roomBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.roomList.setChoiceButtonUnvisible()
 
     # 1:1 채팅방 만들기
@@ -274,9 +282,26 @@ class user(Ktalk):
 
     # 사용자 정보 불러오기
     def dataReading(self):
-        f = open("DataBase/userInfo.dat", "rb")
-        user.IF = pickle.load(f)
+        try:
+            f = open("DataBase/userInfo.dat", "rb")
+            user.IF = pickle.load(f)
+        except:
+            f = open("DataBase/userInfo.dat", "wb")
+            pickle.dump({
+                "name" : "",
+                "id" : "",
+                "password" : "",
+                "friend" : {}
+            }, f)
+            f = open("DataBase/userInfo.dat", "rb")
+            user.IF = pickle.load(f)
         if not user.IF["name"]:
+            QTest.qWait(1000)
+            self.fader_widget = FaderWidget(self.stackWidget.widget(0), self.stackWidget.widget(2))
+            self.stackWidget.setCurrentIndex(2)
+        else:
+            QTest.qWait(1000)
+            self.fader_widget = FaderWidget(self.stackWidget.widget(0), self.stackWidget.widget(1))
             self.stackWidget.setCurrentIndex(1)
             
     # 사용자 정보 불러오기 예외처리
@@ -286,16 +311,16 @@ class user(Ktalk):
         myPassWord = self.userInit.passwordValue.text()
         myPassWordCheck = self.userInit.passwordCheckValue.text()
         if not myName:
-            self.userInit.exceptionAlert.showMessage("이름이 없습니다.", 2000)
+            self.userInit.exceptionAlert.showMessage("이름을 입력해주세요.", 2000)
             return
         elif not myId:
-            self.userInit.exceptionAlert.showMessage("아이디가 없습니다.", 2000)
+            self.userInit.exceptionAlert.showMessage("아이디를 입력해주세요.", 2000)
             return
         elif not myPassWord:
-            self.userInit.exceptionAlert.showMessage("패스워드가 없습니다.", 2000)
+            self.userInit.exceptionAlert.showMessage("패스워드를 입력해주세요.", 2000)
             return
         elif myPassWord != myPassWordCheck:
-            self.userInit.exceptionAlert.showMessage("패스워드가 일치하지 않습니다.", 2000)
+            self.userInit.exceptionAlert.showMessage("패스워드 확인을 제대로 입력해주세요", 2000)
             return
         else :
             user.IF = {
@@ -306,7 +331,7 @@ class user(Ktalk):
                 }
             self.name = user.IF["name"]
             self.dataWriting()
-            self.stackWidget.setCurrentIndex(2)
+            self.stackWidget.setCurrentIndex(3)
             self.sendInfo()
 
     # 사용자 정보 저장하기   
@@ -320,6 +345,7 @@ class user(Ktalk):
         indexs = self.friendList.friendBox.selectedIndexes()
         if not indexs:
             self.friendList.setChoiceButtonUnvisible()
+            return
         for item, index in zip(items, indexs):
             for ID in self.friend:
                 if self.friend[ID] == item.text():
@@ -336,5 +362,5 @@ class user(Ktalk):
             "id" : self.id
             })
         QApplication.closeAllWindows()
-        time.sleep(1)
+        QTest.qWait(100)
         self.sio.disconnect()
