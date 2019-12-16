@@ -195,14 +195,6 @@ class Room(Window):
         self.checkRoomButton.setVisible(True)
         self.cancelRoomButton.setVisible(True)
 
-    def makeChatting(self, roomName):
-        newChat = Chat()
-        newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomName=roomName))
-        newChat.show()
-        self.chatting[roomName] = newChat
-        self.userInOut(room=roomName)
-        self.roomList.roomBox.addItem(roomName)
-
 class Friend(Window):
 
     def __init__(self):
@@ -372,6 +364,7 @@ class Chat(Window):
 
         self.setWindowTitle("Kook Talk")
         self.setGeometry(300, 300, 700, 900)
+        self.show()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:

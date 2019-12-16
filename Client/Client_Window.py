@@ -31,7 +31,7 @@ class user(Ktalk):
     
     def start_connection(self):
         self.sio = socketio.Client()
-        self.sio.connect("http://192.168.34.158:5000")
+        self.sio.connect("http://10.30.117.159:5000")
 
         @self.sio.on("system")
         def on_connect(data):
@@ -66,8 +66,13 @@ class user(Ktalk):
 
         @self.sio.on("invite")
         def on_connect(data):
-            roomName = "&&".join(sorted([self.id, data["friendid"]]))
-            self.roomList.makeChatting(roomName)
+            # roomName = "&&".join(sorted([self.id, data["friendid"]]))
+            # newChat = Chat()
+            # newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomName=roomName))
+            # self.chatting[roomName] = newChat
+            # self.userInOut(room=roomName)
+            # self.roomList.roomBox.addItem(roomName)
+            pass
 
         @self.sio.on("roomclient")
         def on_connect(data):
@@ -247,7 +252,7 @@ class user(Ktalk):
 
     # 1:1 채팅방 만들기
     def friendListClicked(self):
-        if self.friendList.friendBox.currentItem().background() == QColor(0, 255, 0):
+        if self.friendList.friendBox.currentItem().background() == QColor(0, 255, 0, 70):
             friendId = list(self.friend)[self.friendList.friendBox.currentRow()]
             roomName = "&&".join(sorted([self.id, friendId]))
             self.sio.emit("roommanager", {
