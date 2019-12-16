@@ -17,7 +17,15 @@ class user(Ktalk):
         self.currentFriendName = ""
 
         self.security.nameLabel.setText(self.name + "\n")
-        self.friendList.friendBox.addItems(self.friend.values())
+        for value in self.friend.values():
+            item = QListWidgetItem()
+            icon = self.friendList.userCircleIcon
+
+            item.setIcon(icon)
+            item.setText(value)
+            item.setFont(QFont("Arial", 16))
+            
+            self.friendList.friendBox.addItem(item)
 
         self.start_connection()
     
@@ -37,9 +45,9 @@ class user(Ktalk):
         def on_connect(data):
             for ID in data:
                 if data[ID]:
-                    self.friendList.friendBox.findItems(self.friend[ID], Qt.MatchExactly)[0].setBackground(QColor(0, 255, 0))
+                    self.friendList.friendBox.findItems(self.friend[ID], Qt.MatchExactly)[0].setBackground(QColor(0, 255, 0, 70))
                 else:
-                    self.friendList.friendBox.findItems(self.friend[ID], Qt.MatchExactly)[0].setBackground(QColor(255, 255, 255))
+                    self.friendList.friendBox.findItems(self.friend[ID], Qt.MatchExactly)[0].setBackground(QColor(126, 134, 150, 70))
 
         @self.sio.on("exist")
         def on_connect(data):
@@ -49,26 +57,28 @@ class user(Ktalk):
         
         @self.sio.on("checkinout")
         def on_connect(data):
-            if data["id"] == self.id:
+            if data["id"] == self.id or not data["id"] in list(self.friend):
                 return
             if data["type"] == "in":
-                self.friendList.friendBox.findItems(self.friend[data["id"]], Qt.MatchExactly)[0].setBackground(QColor(0, 255, 0))
+                self.friendList.friendBox.findItems(self.friend[data["id"]], Qt.MatchExactly)[0].setBackground(QColor(0, 255, 0, 70))
             else:
-                self.friendList.friendBox.findItems(self.friend[data["id"]], Qt.MatchExactly)[0].setBackground(QColor(255, 255, 255))
+                self.friendList.friendBox.findItems(self.friend[data["id"]], Qt.MatchExactly)[0].setBackground(QColor(126, 134, 150, 70))
 
         @self.sio.on("invite")
         def on_connect(data):
             roomName = "&&".join(sorted([self.id, data["friendid"]]))
-            newChat = Chat()
-            newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomName=roomName))
-            self.chatting[roomName] = newChat
-            self.userInOut(room=roomName)
-            self.roomList.roomBox.addItem(friend)
+            self.roomList.makeChatting(roomName)
 
         @self.sio.on("roomclient")
         def on_connect(data):
             self.chatting[data["room"]].currentFriendBox.clear()
-            self.chatting[data["room"]].currentFriendBox.addItems(data["clients"])
+            for client in data["clients"]:
+                item = QListWidgetItem()
+                icon = self.friendList.userCircleIcon
+                item.setIcon(icon)
+                item.setText(client)
+                item.setFont(QFont("Arial", 16))
+                self.chatting[data["room"]].currentFriendBox.addItem(item)
 
         self.friendList.friendButton.clicked.connect(self.menuButtonClicked)
         self.friendList.chattingButton.clicked.connect(self.menuButtonClicked)
@@ -166,7 +176,12 @@ class user(Ktalk):
                 self.makeFriend.resultfriendName.setText("검색 결과 없음")
                 self.makeFriend.setLayOutVisibleWithoutButton()
         elif sender == self.makeFriend.okButton:
-            self.friendList.friendBox.addItem(self.currentFriendName)
+            item = QListWidgetItem()
+            icon = self.friendList.userCircleIcon
+            item.setIcon(icon)
+            item.setText(self.currentFriendName)
+            item.setFont(QFont("Arial", 16))
+            self.friendList.friendBox.addItem(item)
             self.friend[self.currentFriend] = self.currentFriendName
             self.sio.emit("checkoneperson", {
                 "id" : self.currentFriend
@@ -340,6 +355,7 @@ class user(Ktalk):
                 'friend' : {}
                 }
             self.name = user.IF["name"]
+            self.id = user.IF["id"]
             self.dataWriting()
             self.stackWidget.setCurrentIndex(3)
             self.sendInfo()

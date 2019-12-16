@@ -71,6 +71,7 @@ io.on("connection", function (socket) {
             type : status,
             id : data.id
         })
+
     })
 
     socket.on("friendmanager", function(data) {

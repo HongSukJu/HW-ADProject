@@ -195,6 +195,14 @@ class Room(Window):
         self.checkRoomButton.setVisible(True)
         self.cancelRoomButton.setVisible(True)
 
+    def makeChatting(self, roomName):
+        newChat = Chat()
+        newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomName=roomName))
+        newChat.show()
+        self.chatting[roomName] = newChat
+        self.userInOut(room=roomName)
+        self.roomList.roomBox.addItem(roomName)
+
 class Friend(Window):
 
     def __init__(self):
@@ -235,6 +243,9 @@ class Friend(Window):
         self.friendDelCancelButton.setIcon(self.friendDelCancelButtonIcon)
         self.friendDelCancelButton.setIconSize(QSize(30, 40))
 
+        self.userCirclePixmap = QPixmap("./res/usercircle.png")
+        self.userCircleIcon = QIcon(self.userCirclePixmap)
+
         self.layout.addWidget(self.friendLabel, 1, 1)
         self.layout.addWidget(self.friendDelButton, 1, 5)
         self.layout.addWidget(self.friendMakeButton, 1, 6)
@@ -273,9 +284,13 @@ class MakeFriend(Window):
         self.backButton = QPushButton()
         self.backButton.setIcon(self.backButtonIcon)
         self.backButton.setIconSize(QSize(30, 40))
-        self.emptyLabel = QLabel("\n" * 8)
+        self.emptyLabel = QLabel("\n" * 4)
 
         self.resultLayout = QGridLayout()
+        self.userCirclePixmap = QPixmap("./res/usercircle.png")
+        self.userCircle = QLabel()
+        self.userCircle.setPixmap(self.userCirclePixmap)
+        self.userCircle.resize(60, 60)
         self.resultfriendName = QLabel()
         self.resultfriendName.setAlignment(Qt.AlignCenter)
         self.resultfriendName.setFont(QFont("Arial", 25))
@@ -292,10 +307,11 @@ class MakeFriend(Window):
         self.cancelButton.setIcon(self.cancelButtonIcon)
         self.cancelButton.setIconSize(QSize(30, 40))
 
-        self.resultLayout.addWidget(self.resultfriendName, 1, 1, 1, 2)
-        self.resultLayout.addWidget(self.resultfriendId, 2, 1, 1, 2)
-        self.resultLayout.addWidget(self.okButton, 3, 1)
-        self.resultLayout.addWidget(self.cancelButton, 3, 2)
+        self.resultLayout.addWidget(self.userCircle, 1, 2, 1, 2)
+        self.resultLayout.addWidget(self.resultfriendName, 2, 1, 1, 4)
+        self.resultLayout.addWidget(self.resultfriendId, 3, 1, 1, 4)
+        self.resultLayout.addWidget(self.okButton, 4, 1, 1, 2)
+        self.resultLayout.addWidget(self.cancelButton, 4, 3, 1, 2)
 
         self.layout.addWidget(self.backButton, 1, 1)
         self.layout.addWidget(self.makeFriendLabel, 1, 3)
@@ -307,26 +323,30 @@ class MakeFriend(Window):
         
         self.layout.setAlignment(Qt.AlignTop)
         self.layout.setContentsMargins(50, 50, 50, 50)
+        self.layout.setSpacing(10)
 
         self.setLayOutUnvisible()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
-            self.friendSearch.click()
+            self.friendSearchButton.click()
     
     def setLayOutUnvisible(self):
+        self.userCircle.setVisible(False)
         self.resultfriendName.setVisible(False)
         self.resultfriendId.setVisible(False)
         self.okButton.setVisible(False)
         self.cancelButton.setVisible(False)
 
     def setLayOutVisible(self):
+        self.userCircle.setVisible(True)
         self.resultfriendName.setVisible(True)
         self.resultfriendId.setVisible(True)
         self.okButton.setVisible(True)
         self.cancelButton.setVisible(True)
 
     def setLayOutVisibleWithoutButton(self):
+        self.userCircle.setVisible(True)
         self.resultfriendName.setVisible(True)
         self.resultfriendId.setVisible(True)
 
@@ -352,7 +372,6 @@ class Chat(Window):
 
         self.setWindowTitle("Kook Talk")
         self.setGeometry(300, 300, 700, 900)
-        self.show()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
