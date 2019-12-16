@@ -1,7 +1,10 @@
 const io = require("socket.io")(5000)
+const Barrel = require("./barrel.js")
 let currentUsers = {}
 let saveUsers = {} 
-let roomNumber = 1
+
+let barrel = new Barrel()
+saveUsers = barrel.data
 
 io.on("connection", function (socket) {
 
@@ -11,6 +14,7 @@ io.on("connection", function (socket) {
 
         if (!(data.id in saveUsers)) {
             saveUsers[data.id] = data.name
+            barrel.save(saveUsers)
         }
 
         for (let id of Object.keys(data.friend)) {
@@ -100,7 +104,7 @@ io.on("connection", function (socket) {
                 room : data.room,
                 message : `${data.name}님이 접속하셨습니다.`
             })
-
+            
             console.log(`${data.name} -> ${data.room}`);
             
         }
@@ -122,11 +126,30 @@ io.on("connection", function (socket) {
         }
 
         if (data.type == "init") {
-            console.log("test")
             io.to(currentUsers[data.friendid]).emit("invite", {
                 friendid : data.id
             })
         }
+
+        io.in(data.room).clients((error, clients) => {
+            if (error) throw error
+
+            let clientName = []
+            for (let client of clients) {
+                for (let user of Object.keys(currentUsers)) {
+                    if (currentUsers[user] == client) {
+                        clientName.push(saveUsers[user])
+                        continue
+                    }
+                }
+            }
+
+            io.to(data.room).emit("roomclient", {
+                room : data.room,
+                clients : clientName
+            })
+        })
+
     })
 
     socket.on("room", function (data) {

@@ -4,6 +4,7 @@ from Client_UI import *
 class user(Ktalk):
 
     IF = None
+    fileName = "dataBase/userInfo.dat"
     
     def __init__(self):
         super().__init__()
@@ -22,7 +23,7 @@ class user(Ktalk):
     
     def start_connection(self):
         self.sio = socketio.Client()
-        self.sio.connect("http://172.30.1.60:5000")
+        self.sio.connect("http://192.168.34.158:5000")
 
         @self.sio.on("system")
         def on_connect(data):
@@ -64,6 +65,11 @@ class user(Ktalk):
             self.userInOut(room=roomName)
             self.roomList.roomBox.addItem(friend)
 
+        @self.sio.on("roomclient")
+        def on_connect(data):
+            self.chatting[data["room"]].currentFriendBox.clear()
+            self.chatting[data["room"]].currentFriendBox.addItems(data["clients"])
+
         self.friendList.friendButton.clicked.connect(self.menuButtonClicked)
         self.friendList.chattingButton.clicked.connect(self.menuButtonClicked)
         self.friendList.friendMakeButton.clicked.connect(self.friendButtonClicked)
@@ -75,9 +81,9 @@ class user(Ktalk):
         self.roomList.makeRoomButton.clicked.connect(self.makeRoomButtonClicked)
         self.roomList.deleteRoomButton.clicked.connect(self.deleteRoomButtonClicked)
         self.roomList.checkRoomButton.clicked.connect(self.checkRoomButtonClicked)
-        self.roomList.cancleRoomButton.clicked.connect(self.cancleRoomButtonClicked)
+        self.roomList.cancelRoomButton.clicked.connect(self.cancelRoomButtonClicked)
         self.roomList.roomBox.itemDoubleClicked.connect(self.openChatting)
-        self.makeFriend.friendSearch.clicked.connect(self.makeFriendButtonClicked)
+        self.makeFriend.friendSearchButton.clicked.connect(self.makeFriendButtonClicked)
         self.makeFriend.okButton.clicked.connect(self.makeFriendButtonClicked)
         self.makeFriend.cancelButton.clicked.connect(self.makeFriendButtonClicked)
         self.makeFriend.backButton.clicked.connect(self.makeFriendButtonClicked)
@@ -110,22 +116,22 @@ class user(Ktalk):
     # 친구창 처리
     def friendButtonClicked(self):
         sender = self.sender()
-        if sender.text() == "+":
+        if sender == self.friendList.friendMakeButton:
             self.stackWidget.setCurrentIndex(5)
-        elif sender.text() == "-":
+        elif sender == self.friendList.friendDelButton:
             self.friendList.friendBox.setSelectionMode(QAbstractItemView.MultiSelection)
             self.friendList.setChoiceButtonVisible()
-        elif sender.text() == "확인":
+        elif sender == self.friendList.friendDelOkButton:
             self.friendListDelete()
             self.friendList.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
-        elif sender.text() == "취소":
+        elif sender == self.friendList.friendDelCancelButton:
             self.friendList.setChoiceButtonUnvisible()
             self.friendList.friendBox.setSelectionMode(QAbstractItemView.NoSelection)
 
     # 친구 만들기 처리
     def makeFriendButtonClicked(self):
         sender = self.sender()
-        if sender.text() == "검색":
+        if sender == self.makeFriend.friendSearchButton:
             friendId = self.makeFriend.friendId.text()
             self.makeFriend.setLayOutUnvisible()
             if friendId:
@@ -159,7 +165,7 @@ class user(Ktalk):
                 self.makeFriend.resultfriendId.setText("최소 한자리 이상의 아이디를 검색해야 합니다.")
                 self.makeFriend.resultfriendName.setText("검색 결과 없음")
                 self.makeFriend.setLayOutVisibleWithoutButton()
-        elif sender.text() == "추가":
+        elif sender == self.makeFriend.okButton:
             self.friendList.friendBox.addItem(self.currentFriendName)
             self.friend[self.currentFriend] = self.currentFriendName
             self.sio.emit("checkoneperson", {
@@ -169,36 +175,35 @@ class user(Ktalk):
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
             self.stackWidget.setCurrentIndex(3)
-        elif sender.text() == "취소":
+        elif sender == self.makeFriend.cancelButton:
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
             self.stackWidget.setCurrentIndex(3)
-        elif sender.text() == "<-":
+        elif sender == self.makeFriend.backButton:
             self.makeFriend.friendId.setText("")
             self.makeFriend.setLayOutUnvisible()
             self.stackWidget.setCurrentIndex(3)
 
     # 방 만들기
     def makeRoomButtonClicked(self):
-        sender = self.sender()
-        if sender.text() == "+":
-            roomNameValue = self.roomList.roomNameValue.text()
-            if roomNameValue in self.chatting:
-                self.roomList.roomNameValue.setText("")
-                return
-            if roomNameValue:
-                newChat = Chat()
-                newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomNameValue))
-                self.chatting[roomNameValue] = newChat
-                self.userInOut(roomNameValue)
-                self.roomList.roomBox.addItem(roomNameValue)
-                self.roomList.roomNameValue.setText("")
+        roomNameValue = self.roomList.roomNameValue.text()
+        if roomNameValue in self.chatting:
+            self.roomList.roomNameValue.setText("")
+            return
+        if roomNameValue:
+            newChat = Chat()
+            newChat.sendButton.clicked.connect(lambda : self.sendMessage(roomNameValue))
+            self.chatting[roomNameValue] = newChat
+            self.userInOut(roomNameValue)
+            self.roomList.roomBox.addItem(roomNameValue)
+            self.roomList.roomNameValue.setText("")
                 
-
+    # 방 지우기 처리
     def deleteRoomButtonClicked(self):
         self.roomList.setChoiceButtonVisible()
         self.roomList.roomBox.setSelectionMode(QAbstractItemView.MultiSelection)
 
+    # 방 지우기 처리2
     def checkRoomButtonClicked(self):
         items = self.roomList.roomBox.selectedItems()
         indexs = self.roomList.roomBox.selectedIndexes()
@@ -218,7 +223,10 @@ class user(Ktalk):
         self.roomList.roomBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.roomList.setChoiceButtonUnvisible()
             
-    def cancleRoomButtonClicked(self):
+    # 방 지우기 처리3
+    def cancelRoomButtonClicked(self):
+        for item in self.roomList.roomBox.selectedItems():
+            item.setSelected(False)
         self.roomList.roomBox.setSelectionMode(QAbstractItemView.NoSelection)
         self.roomList.setChoiceButtonUnvisible()
 
@@ -253,6 +261,7 @@ class user(Ktalk):
         elif userType == "system":
             item.setTextAlignment(Qt.AlignCenter)
         self.chatting[room].chattingBox.addItem(item)
+        self.chatting[room].chattingBox.scrollToBottom()
 
     # 방 들어가기
     def userInOut(self, room):
@@ -262,6 +271,7 @@ class user(Ktalk):
             "room" : room
         })
 
+    # 방 열기
     def openChatting(self):
         self.chatting[self.roomList.roomBox.currentItem().text()].show()
 
@@ -283,17 +293,17 @@ class user(Ktalk):
     # 사용자 정보 불러오기
     def dataReading(self):
         try:
-            f = open("DataBase/userInfo.dat", "rb")
+            f = open(user.fileName, "rb")
             user.IF = pickle.load(f)
         except:
-            f = open("DataBase/userInfo.dat", "wb")
+            f = open(user.fileName, "wb")
             pickle.dump({
                 "name" : "",
                 "id" : "",
                 "password" : "",
                 "friend" : {}
             }, f)
-            f = open("DataBase/userInfo.dat", "rb")
+            f = open(user.fileName, "rb")
             user.IF = pickle.load(f)
         if not user.IF["name"]:
             QTest.qWait(1000)
@@ -336,7 +346,7 @@ class user(Ktalk):
 
     # 사용자 정보 저장하기   
     def dataWriting(self):
-        f = open("DataBase/userInfo.dat", "wb")
+        f = open(user.fileName, "wb")
         pickle.dump(user.IF, f)
 
     # 친구 목록 지우기
